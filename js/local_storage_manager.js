@@ -21,6 +21,7 @@ window.fakeStorage = {
 function LocalStorageManager() {
   this.bestScoreKey     = "bestScore";
   this.gameStateKey     = "gameState";
+  this.bestMovesKey     = "bestMoves";
 
   var supported = this.localStorageSupported();
   this.storage = supported ? window.localStorage : window.fakeStorage;
@@ -46,6 +47,16 @@ LocalStorageManager.prototype.getBestScore = function () {
 
 LocalStorageManager.prototype.setBestScore = function (score) {
   this.storage.setItem(this.bestScoreKey, score);
+};
+
+// Best moves (fewest moves to reach 2048) getters/setters
+LocalStorageManager.prototype.getBestMoves = function () {
+  var bestMoves = this.storage.getItem(this.bestMovesKey);
+  return bestMoves ? parseInt(bestMoves, 10) : null;
+};
+
+LocalStorageManager.prototype.setBestMoves = function (moves) {
+  this.storage.setItem(this.bestMovesKey, moves);
 };
 
 // Game state getters/setters and clearing
