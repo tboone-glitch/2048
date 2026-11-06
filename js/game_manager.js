@@ -43,12 +43,14 @@ GameManager.prototype.setup = function () {
     this.over        = previousState.over;
     this.won         = previousState.won;
     this.keepPlaying = previousState.keepPlaying;
+    this.moves       = previousState.moves || 0;
   } else {
     this.grid        = new Grid(this.size);
     this.score       = 0;
     this.over        = false;
     this.won         = false;
     this.keepPlaying = false;
+    this.moves       = 0;
 
     // Add the initial tiles
     this.addStartTiles();
@@ -93,9 +95,20 @@ GameManager.prototype.actuate = function () {
     over:       this.over,
     won:        this.won,
     bestScore:  this.storageManager.getBestScore(),
+    moves:      this.moves,
+    bestMoves:  this.storageManager.getBestMoves(),
     terminated: this.isGameTerminated()
   });
 
+};
+
+// Record the fewest moves taken to reach 2048
+GameManager.prototype.updateBestMoves = function () {
+  var bestMoves = this.storageManager.getBestMoves();
+
+  if (bestMoves === null || this.moves < bestMoves) {
+    this.storageManager.setBestMoves(this.moves);
+  }
 };
 
 // Represent the current game as an object
@@ -105,7 +118,8 @@ GameManager.prototype.serialize = function () {
     score:       this.score,
     over:        this.over,
     won:         this.won,
-    keepPlaying: this.keepPlaying
+    keepPlaying: this.keepPlaying,
+    moves:       this.moves
   };
 };
 
@@ -138,6 +152,7 @@ GameManager.prototype.move = function (direction) {
   var vector     = this.getVector(direction);
   var traversals = this.buildTraversals(vector);
   var moved      = false;
+  var wasWon     = this.won;
 
   // Save the current tile positions and remove merger information
   this.prepareTiles();
@@ -180,6 +195,10 @@ GameManager.prototype.move = function (direction) {
   });
 
   if (moved) {
+    this.moves++;
+
+    if (this.won && !wasWon) this.updateBestMoves();
+
     this.addRandomTile();
 
     if (!this.movesAvailable()) {
